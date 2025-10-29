@@ -1,4 +1,4 @@
-import { LayoutDashboard, LogOut, Sparkles } from 'lucide-react';
+import { LayoutDashboard, LogOut, Sparkles, BookOpen, Brain, TrendingUp } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import {
   Sidebar,
@@ -17,6 +17,9 @@ import { Button } from '@/components/ui/button';
 
 const memberItems = [
   { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
+  { title: 'Lições', url: '/lessons', icon: BookOpen },
+  { title: 'Quizzes', url: '/quizzes', icon: Brain },
+  { title: 'Progresso', url: '/progress', icon: TrendingUp },
 ];
 
 export function MemberSidebar() {

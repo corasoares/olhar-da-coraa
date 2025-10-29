@@ -9,6 +9,9 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import SuperAdmin from "./pages/SuperAdmin";
+import Lessons from "./pages/Lessons";
+import Quizzes from "./pages/Quizzes";
+import Progress from "./pages/Progress";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +39,30 @@ const App = () => (
               element={
                 <ProtectedRoute requireSuperAdmin>
                   <SuperAdmin />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/lessons"
+              element={
+                <ProtectedRoute>
+                  <Lessons />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/quizzes"
+              element={
+                <ProtectedRoute>
+                  <Quizzes />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/progress"
+              element={
+                <ProtectedRoute>
+                  <Progress />
                 </ProtectedRoute>
               }
             />

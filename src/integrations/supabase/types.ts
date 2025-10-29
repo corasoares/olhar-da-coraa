@@ -14,6 +14,105 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_recommendations: {
+        Row: {
+          accepted_at: string | null
+          based_on_difficulties: string[] | null
+          completed_at: string | null
+          content: Json
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          priority: string | null
+          reasoning: string | null
+          recommendation_type: string
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          based_on_difficulties?: string[] | null
+          completed_at?: string | null
+          content?: Json
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          priority?: string | null
+          reasoning?: string | null
+          recommendation_type: string
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string | null
+          based_on_difficulties?: string[] | null
+          completed_at?: string | null
+          content?: Json
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          priority?: string | null
+          reasoning?: string | null
+          recommendation_type?: string
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      lessons: {
+        Row: {
+          content: Json | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          difficulty: string | null
+          embedding: string | null
+          estimated_duration: number | null
+          fashion_era: string | null
+          id: string
+          is_active: boolean | null
+          lesson_type: string
+          points_reward: number | null
+          title: string
+          topics: string[]
+          updated_at: string | null
+        }
+        Insert: {
+          content?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          difficulty?: string | null
+          embedding?: string | null
+          estimated_duration?: number | null
+          fashion_era?: string | null
+          id?: string
+          is_active?: boolean | null
+          lesson_type: string
+          points_reward?: number | null
+          title: string
+          topics?: string[]
+          updated_at?: string | null
+        }
+        Update: {
+          content?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          difficulty?: string | null
+          embedding?: string | null
+          estimated_duration?: number | null
+          fashion_era?: string | null
+          id?: string
+          is_active?: boolean | null
+          lesson_type?: string
+          points_reward?: number | null
+          title?: string
+          topics?: string[]
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -40,6 +139,223 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      quiz_attempts: {
+        Row: {
+          answers: Json
+          completed_at: string | null
+          correct_answers: number | null
+          created_at: string | null
+          id: string
+          incorrect_answers: number | null
+          lesson_id: string | null
+          points_earned: number | null
+          questions: Json
+          quiz_type: string
+          score: number | null
+          time_taken: number | null
+          topics_covered: string[] | null
+          user_id: string
+        }
+        Insert: {
+          answers?: Json
+          completed_at?: string | null
+          correct_answers?: number | null
+          created_at?: string | null
+          id?: string
+          incorrect_answers?: number | null
+          lesson_id?: string | null
+          points_earned?: number | null
+          questions?: Json
+          quiz_type: string
+          score?: number | null
+          time_taken?: number | null
+          topics_covered?: string[] | null
+          user_id: string
+        }
+        Update: {
+          answers?: Json
+          completed_at?: string | null
+          correct_answers?: number | null
+          created_at?: string | null
+          id?: string
+          incorrect_answers?: number | null
+          lesson_id?: string | null
+          points_earned?: number | null
+          questions?: Json
+          quiz_type?: string
+          score?: number | null
+          time_taken?: number | null
+          topics_covered?: string[] | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_attempts_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_difficulties: {
+        Row: {
+          category: string | null
+          context: string | null
+          created_at: string | null
+          difficulty_level: string | null
+          embedding: string | null
+          error_count: number | null
+          id: string
+          last_error_at: string | null
+          resolved: boolean | null
+          resolved_at: string | null
+          topic: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          context?: string | null
+          created_at?: string | null
+          difficulty_level?: string | null
+          embedding?: string | null
+          error_count?: number | null
+          id?: string
+          last_error_at?: string | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          topic: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          context?: string | null
+          created_at?: string | null
+          difficulty_level?: string | null
+          embedding?: string | null
+          error_count?: number | null
+          id?: string
+          last_error_at?: string | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          topic?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_learning_profiles: {
+        Row: {
+          average_score: number | null
+          badges: string[] | null
+          completion_rate: number | null
+          created_at: string | null
+          id: string
+          last_activity_date: string | null
+          learning_style: string | null
+          level: number | null
+          points: number | null
+          preferred_difficulty: string | null
+          streak_days: number | null
+          strengths: string[] | null
+          total_lessons_completed: number | null
+          total_quizzes_completed: number | null
+          updated_at: string | null
+          user_id: string
+          weaknesses: string[] | null
+        }
+        Insert: {
+          average_score?: number | null
+          badges?: string[] | null
+          completion_rate?: number | null
+          created_at?: string | null
+          id?: string
+          last_activity_date?: string | null
+          learning_style?: string | null
+          level?: number | null
+          points?: number | null
+          preferred_difficulty?: string | null
+          streak_days?: number | null
+          strengths?: string[] | null
+          total_lessons_completed?: number | null
+          total_quizzes_completed?: number | null
+          updated_at?: string | null
+          user_id: string
+          weaknesses?: string[] | null
+        }
+        Update: {
+          average_score?: number | null
+          badges?: string[] | null
+          completion_rate?: number | null
+          created_at?: string | null
+          id?: string
+          last_activity_date?: string | null
+          learning_style?: string | null
+          level?: number | null
+          points?: number | null
+          preferred_difficulty?: string | null
+          streak_days?: number | null
+          strengths?: string[] | null
+          total_lessons_completed?: number | null
+          total_quizzes_completed?: number | null
+          updated_at?: string | null
+          user_id?: string
+          weaknesses?: string[] | null
+        }
+        Relationships: []
+      }
+      user_lesson_progress: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          lesson_id: string
+          progress_percentage: number | null
+          responses: Json | null
+          started_at: string | null
+          status: string | null
+          time_spent: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          lesson_id: string
+          progress_percentage?: number | null
+          responses?: Json | null
+          started_at?: string | null
+          status?: string | null
+          time_spent?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          lesson_id?: string
+          progress_percentage?: number | null
+          responses?: Json | null
+          started_at?: string | null
+          status?: string | null
+          time_spent?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_lesson_progress_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
