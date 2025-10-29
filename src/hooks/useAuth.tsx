@@ -39,6 +39,23 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
+  const fetchAndSetRole = async (uid: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', uid);
+
+      if (error) throw error;
+
+      const roles = (data || []).map((r: any) => r.role as 'super_admin' | 'user');
+      setUserRole(roles.includes('super_admin') ? 'super_admin' : 'user');
+    } catch (err) {
+      console.error('Error fetching user role:', err);
+      setUserRole('user');
+    }
+  };
+
   useEffect(() => {
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -49,24 +66,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
         if (session?.user) {
           // Fetch user role using setTimeout to prevent deadlock
-          setTimeout(async () => {
-            try {
-              const { data: roleData, error } = await supabase
-                .from('user_roles')
-                .select('role')
-                .eq('user_id', session.user.id)
-                .single();
-
-              if (error) {
-                console.error('Error fetching user role:', error);
-                setUserRole('user');
-              } else {
-                setUserRole(roleData?.role as 'super_admin' | 'user');
-              }
-            } catch (err) {
-              console.error('Unexpected error fetching role:', err);
-              setUserRole('user');
-            }
+          setTimeout(() => {
+            fetchAndSetRole(session.user!.id);
           }, 0);
         } else {
           setUserRole(null);
@@ -81,19 +82,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       
       if (session?.user) {
         setTimeout(async () => {
-          try {
-            const { data: roleData } = await supabase
-              .from('user_roles')
-              .select('role')
-              .eq('user_id', session.user.id)
-              .single();
-
-            setUserRole(roleData?.role as 'super_admin' | 'user' || 'user');
-            setLoading(false);
-          } catch {
-            setUserRole('user');
-            setLoading(false);
-          }
+          await fetchAndSetRole(session.user!.id);
+          setLoading(false);
         }, 0);
       } else {
         setLoading(false);

@@ -3,9 +3,18 @@ import { MemberSidebar } from '@/components/MemberSidebar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
 import { Sparkles } from 'lucide-react';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (userRole === 'super_admin') {
+      navigate('/super-admin', { replace: true });
+    }
+  }, [userRole, navigate]);
 
   return (
     <SidebarProvider>
