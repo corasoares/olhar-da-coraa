@@ -9,7 +9,8 @@ const Index = () => {
   const { user, userRole } = useAuth();
 
   useEffect(() => {
-    if (user) {
+    if (user && userRole) {
+      // Only redirect once we have both user AND role loaded
       if (userRole === 'super_admin') {
         navigate('/super-admin');
       } else {
