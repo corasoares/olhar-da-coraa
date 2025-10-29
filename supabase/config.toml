@@ -1,0 +1,7 @@
+project_id = "bdavaqclmlsufstzpjrj"
+
+[functions.create-super-admin]
+verify_jwt = false
+
+[functions.init-super-admins]
+verify_jwt = false
