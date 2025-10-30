@@ -67,15 +67,23 @@ export type Database = {
           description: string | null
           difficulty: string | null
           embedding: string | null
+          end_date: string | null
           estimated_duration: number | null
           fashion_era: string | null
+          format: string | null
           id: string
           is_active: boolean | null
+          is_additional: boolean | null
+          knowledge_base: string | null
           lesson_type: string
+          media_url: string | null
           points_reward: number | null
+          quiz_config: Json | null
+          start_date: string | null
           title: string
           topics: string[]
           updated_at: string | null
+          youtube_url: string | null
         }
         Insert: {
           content?: Json | null
@@ -84,15 +92,23 @@ export type Database = {
           description?: string | null
           difficulty?: string | null
           embedding?: string | null
+          end_date?: string | null
           estimated_duration?: number | null
           fashion_era?: string | null
+          format?: string | null
           id?: string
           is_active?: boolean | null
+          is_additional?: boolean | null
+          knowledge_base?: string | null
           lesson_type: string
+          media_url?: string | null
           points_reward?: number | null
+          quiz_config?: Json | null
+          start_date?: string | null
           title: string
           topics?: string[]
           updated_at?: string | null
+          youtube_url?: string | null
         }
         Update: {
           content?: Json | null
@@ -101,15 +117,23 @@ export type Database = {
           description?: string | null
           difficulty?: string | null
           embedding?: string | null
+          end_date?: string | null
           estimated_duration?: number | null
           fashion_era?: string | null
+          format?: string | null
           id?: string
           is_active?: boolean | null
+          is_additional?: boolean | null
+          knowledge_base?: string | null
           lesson_type?: string
+          media_url?: string | null
           points_reward?: number | null
+          quiz_config?: Json | null
+          start_date?: string | null
           title?: string
           topics?: string[]
           updated_at?: string | null
+          youtube_url?: string | null
         }
         Relationships: []
       }
@@ -309,6 +333,7 @@ export type Database = {
       }
       user_lesson_progress: {
         Row: {
+          ai_feedback: Json | null
           completed_at: string | null
           created_at: string | null
           id: string
@@ -322,6 +347,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          ai_feedback?: Json | null
           completed_at?: string | null
           created_at?: string | null
           id?: string
@@ -335,6 +361,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          ai_feedback?: Json | null
           completed_at?: string | null
           created_at?: string | null
           id?: string

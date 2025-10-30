@@ -23,7 +23,7 @@ const Lessons = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as Lesson[];
+      return data as any[];
     },
   });
 

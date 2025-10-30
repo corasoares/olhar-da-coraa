@@ -34,6 +34,46 @@ export interface Lesson {
   created_by: string | null;
   created_at: string;
   updated_at: string;
+  format?: 'image' | 'text' | 'video' | 'pdf' | 'audio';
+  media_url?: string | null;
+  youtube_url?: string | null;
+  start_date?: string | null;
+  end_date?: string | null;
+  is_additional?: boolean;
+  knowledge_base?: string | null;
+  quiz_config?: QuizConfig;
+}
+
+export interface QuizConfig {
+  questions: LessonQuestion[];
+}
+
+export interface LessonQuestion {
+  id: string;
+  order: number;
+  type: 'dissertativa' | 'multipla_escolha';
+  question: string;
+  options?: QuestionOption[];
+}
+
+export interface QuestionOption {
+  id: string;
+  text: string;
+  is_correct: boolean;
+}
+
+export interface AIFeedback {
+  overall_score: number;
+  question_feedback: QuestionFeedback[];
+  generated_at: string;
+}
+
+export interface QuestionFeedback {
+  question_id: string;
+  user_answer: string;
+  is_correct: boolean;
+  ai_reasoning: string;
+  score: number;
 }
 
 export interface UserLessonProgress {
@@ -48,6 +88,7 @@ export interface UserLessonProgress {
   completed_at: string | null;
   created_at: string;
   updated_at: string;
+  ai_feedback?: AIFeedback;
 }
 
 export interface QuizAttempt {

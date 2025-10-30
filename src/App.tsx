@@ -13,6 +13,8 @@ import Lessons from "./pages/Lessons";
 import Quizzes from "./pages/Quizzes";
 import Progress from "./pages/Progress";
 import NotFound from "./pages/NotFound";
+import LessonsManager from "./pages/admin/LessonsManager";
+import LessonEditor from "./pages/admin/LessonEditor";
 
 const queryClient = new QueryClient();
 
@@ -66,6 +68,9 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            <Route path="/admin/lessons" element={<ProtectedRoute requireSuperAdmin><LessonsManager /></ProtectedRoute>} />
+            <Route path="/admin/lessons/new" element={<ProtectedRoute requireSuperAdmin><LessonEditor /></ProtectedRoute>} />
+            <Route path="/admin/lessons/:id" element={<ProtectedRoute requireSuperAdmin><LessonEditor /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

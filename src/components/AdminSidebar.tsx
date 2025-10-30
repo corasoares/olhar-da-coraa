@@ -1,4 +1,4 @@
-import { LayoutDashboard, Settings, Users, LogOut, Sparkles } from 'lucide-react';
+import { LayoutDashboard, Settings, Users, LogOut, Sparkles, BookOpen } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import {
   Sidebar,
@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 
 const adminItems = [
   { title: 'Dashboard', url: '/super-admin', icon: LayoutDashboard },
+  { title: 'Lições', url: '/admin/lessons', icon: BookOpen },
   { title: 'Usuários', url: '/super-admin/users', icon: Users },
   { title: 'Configurações', url: '/super-admin/settings', icon: Settings },
 ];
