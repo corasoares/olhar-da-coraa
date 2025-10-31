@@ -10,12 +10,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { MediaUploader } from '@/components/admin/MediaUploader';
 import { QuizBuilder } from '@/components/admin/QuizBuilder';
 import { Lesson, LessonQuestion, QuizConfig } from '@/types/learning';
 import { toast } from 'sonner';
-import { ArrowLeft, Save, Send } from 'lucide-react';
+import { ArrowLeft, Save, Send, CalendarIcon } from 'lucide-react';
+import { format, parse } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 export default function LessonEditor() {
   const { id } = useParams();
@@ -27,9 +31,9 @@ export default function LessonEditor() {
   const [description, setDescription] = useState('');
   const [topics, setTopics] = useState<string[]>([]);
   const [isAdditional, setIsAdditional] = useState(false);
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [format, setFormat] = useState<'image' | 'text' | 'video' | 'pdf' | 'audio'>('text');
+  const [startDate, setStartDate] = useState<Date>();
+  const [endDate, setEndDate] = useState<Date>();
+  const [contentFormat, setContentFormat] = useState<'image' | 'text' | 'video' | 'pdf' | 'audio'>('text');
   const [mediaUrl, setMediaUrl] = useState('');
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [textContent, setTextContent] = useState('');
@@ -63,9 +67,9 @@ export default function LessonEditor() {
     setDescription(lesson.description || '');
     setTopics(lesson.topics || []);
     setIsAdditional(lesson.is_additional || false);
-    setStartDate(lesson.start_date || '');
-    setEndDate(lesson.end_date || '');
-    setFormat(lesson.format || 'text');
+    if (lesson.start_date) setStartDate(new Date(lesson.start_date));
+    if (lesson.end_date) setEndDate(new Date(lesson.end_date));
+    setContentFormat(lesson.format || 'text');
     setMediaUrl(lesson.media_url || '');
     setYoutubeUrl(lesson.youtube_url || '');
     setTextContent(lesson.content || '');
@@ -84,19 +88,19 @@ export default function LessonEditor() {
       toast.error('Período é obrigatório');
       return false;
     }
-    if (new Date(endDate) <= new Date(startDate)) {
+    if (endDate && startDate && endDate <= startDate) {
       toast.error('Data final deve ser posterior à data inicial');
       return false;
     }
-    if (format === 'text' && !textContent.trim()) {
+    if (contentFormat === 'text' && !textContent.trim()) {
       toast.error('Conteúdo de texto é obrigatório');
       return false;
     }
-    if ((format === 'image' || format === 'pdf' || format === 'audio') && !mediaUrl) {
+    if ((contentFormat === 'image' || contentFormat === 'pdf' || contentFormat === 'audio') && !mediaUrl) {
       toast.error('Upload de mídia é obrigatório');
       return false;
     }
-    if (format === 'video' && !mediaUrl && !youtubeUrl) {
+    if (contentFormat === 'video' && !mediaUrl && !youtubeUrl) {
       toast.error('Upload de vídeo ou link do YouTube é obrigatório');
       return false;
     }
@@ -138,17 +142,21 @@ export default function LessonEditor() {
     try {
       const quizConfig: QuizConfig = { questions };
 
+      // Convert dates to ISO string with timezone
+      const startDateISO = startDate ? new Date(startDate.setHours(0, 0, 0, 0)).toISOString() : null;
+      const endDateISO = endDate ? new Date(endDate.setHours(23, 59, 59, 999)).toISOString() : null;
+
       const lessonData: any = {
         title,
         description,
         topics,
         is_additional: isAdditional,
-        start_date: startDate,
-        end_date: endDate,
-        format,
-        media_url: format !== 'text' && format !== 'video' ? mediaUrl : null,
-        youtube_url: format === 'video' ? youtubeUrl || null : null,
-        content: format === 'text' ? textContent : null,
+        start_date: startDateISO,
+        end_date: endDateISO,
+        format: contentFormat,
+        media_url: contentFormat !== 'text' && contentFormat !== 'video' ? mediaUrl : null,
+        youtube_url: contentFormat === 'video' ? youtubeUrl || null : null,
+        content: contentFormat === 'text' ? textContent : null,
         knowledge_base: knowledgeBase,
         quiz_config: quizConfig,
         points_reward: pointsReward,
@@ -255,21 +263,56 @@ export default function LessonEditor() {
               <CardContent className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="start-date">Data Inicial *</Label>
-                  <Input
-                    id="start-date"
-                    type="datetime-local"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                  />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !startDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {startDate ? format(startDate, "dd/MM/yyyy", { locale: ptBR }) : <span>Selecione a data</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={startDate}
+                        onSelect={setStartDate}
+                        initialFocus
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 <div>
                   <Label htmlFor="end-date">Data Final *</Label>
-                  <Input
-                    id="end-date"
-                    type="datetime-local"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                  />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !endDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {endDate ? format(endDate, "dd/MM/yyyy", { locale: ptBR }) : <span>Selecione a data</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={endDate}
+                        onSelect={setEndDate}
+                        disabled={(date) => startDate ? date < startDate : false}
+                        initialFocus
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </CardContent>
             </Card>
@@ -281,7 +324,7 @@ export default function LessonEditor() {
               <CardContent className="space-y-4">
                 <div>
                   <Label htmlFor="format">Tipo de Conteúdo *</Label>
-                  <Select value={format} onValueChange={(v: any) => setFormat(v)}>
+                  <Select value={contentFormat} onValueChange={(v: any) => setContentFormat(v)}>
                     <SelectTrigger id="format">
                       <SelectValue />
                     </SelectTrigger>
@@ -295,7 +338,7 @@ export default function LessonEditor() {
                   </Select>
                 </div>
 
-                {format === 'text' && (
+                {contentFormat === 'text' && (
                   <div>
                     <Label htmlFor="text-content">Conteúdo de Texto *</Label>
                     <Textarea
@@ -308,7 +351,7 @@ export default function LessonEditor() {
                   </div>
                 )}
 
-                {format === 'video' && (
+                {contentFormat === 'video' && (
                   <div>
                     <Label htmlFor="youtube-url">Link do YouTube (opcional)</Label>
                     <Input
@@ -323,9 +366,9 @@ export default function LessonEditor() {
                   </div>
                 )}
 
-                {format !== 'text' && (
+                {contentFormat !== 'text' && (
                   <MediaUploader
-                    format={format}
+                    format={contentFormat}
                     onUploadComplete={setMediaUrl}
                     currentUrl={mediaUrl}
                   />
