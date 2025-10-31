@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.init-super-admins]
 verify_jwt = false
+
+[functions.evaluate-lesson-responses]
+verify_jwt = true

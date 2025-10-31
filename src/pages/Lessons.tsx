@@ -1,39 +1,32 @@
-import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { MemberSidebar } from '@/components/MemberSidebar';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { Lesson } from '@/types/learning';
-import { BookOpen, Clock, Star } from 'lucide-react';
+import { useActiveLessons } from '@/hooks/useActiveLessons';
+import { LessonCard } from '@/components/lessons/LessonCard';
+import { BookOpen } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronDown } from 'lucide-react';
 
 const Lessons = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
-  const { data: lessons, isLoading } = useQuery({
-    queryKey: ['lessons'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('lessons')
-        .select('*')
-        .eq('is_active', true)
-        .order('created_at', { ascending: false });
+  const {
+    weeklyLessons,
+    additionalLessons,
+    upcomingLessons,
+    pastLessons,
+    weeklyProgress,
+    additionalProgress,
+    upcomingProgress,
+    pastProgress,
+    isLoading,
+  } = useActiveLessons(user?.id);
 
-      if (error) throw error;
-      return data as any[];
-    },
-  });
-
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'easy': return 'bg-green-500/20 text-green-700 dark:text-green-400';
-      case 'medium': return 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-400';
-      case 'hard': return 'bg-red-500/20 text-red-700 dark:text-red-400';
-      default: return 'bg-muted text-muted-foreground';
-    }
+  const handleStartLesson = (lessonId: string) => {
+    navigate(`/lesson/${lessonId}`);
   };
 
   return (
@@ -54,75 +47,108 @@ const Lessons = () => {
           </div>
 
           {isLoading ? (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {[1, 2, 3].map((i) => (
-                <Card key={i} className="animate-pulse">
-                  <CardHeader>
-                    <div className="h-4 bg-muted rounded w-3/4 mb-2" />
-                    <div className="h-3 bg-muted rounded w-1/2" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="h-20 bg-muted rounded" />
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : lessons && lessons.length > 0 ? (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {lessons.map((lesson) => (
-                <Card key={lesson.id} className="hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <div className="flex items-start justify-between mb-2">
-                      <Badge className={getDifficultyColor(lesson.difficulty)}>
-                        {lesson.difficulty === 'easy' ? 'Fácil' : 
-                         lesson.difficulty === 'medium' ? 'Médio' : 'Difícil'}
-                      </Badge>
-                      <Badge variant="outline" className="flex items-center gap-1">
-                        <Star className="h-3 w-3" />
-                        {lesson.points_reward}
-                      </Badge>
-                    </div>
-                    <CardTitle className="text-xl">{lesson.title}</CardTitle>
-                    <CardDescription>{lesson.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
-                        {lesson.estimated_duration || 15} min
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <BookOpen className="h-4 w-4" />
-                        {lesson.lesson_type === 'quiz' ? 'Quiz' :
-                         lesson.lesson_type === 'theory' ? 'Teoria' :
-                         lesson.lesson_type === 'questionnaire' ? 'Questionário' :
-                         'Análise de Imagem'}
-                      </div>
-                    </div>
-                    {lesson.topics.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {lesson.topics.slice(0, 3).map((topic) => (
-                          <Badge key={topic} variant="secondary" className="text-xs">
-                            {topic}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                    <Button className="w-full">Iniciar Lição</Button>
-                  </CardContent>
-                </Card>
-              ))}
+            <div className="space-y-8">
+              <Card className="animate-pulse h-64" />
+              <div className="h-4 bg-muted rounded w-48 mb-4" />
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {[1, 2, 3].map((i) => (
+                  <Card key={i} className="animate-pulse h-48" />
+                ))}
+              </div>
             </div>
           ) : (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <BookOpen className="h-16 w-16 text-muted-foreground mb-4" />
-                <h3 className="text-xl font-semibold mb-2">Nenhuma lição disponível</h3>
-                <p className="text-muted-foreground text-center">
-                  Novas lições serão adicionadas em breve. Fique atenta!
-                </p>
-              </CardContent>
-            </Card>
+            <div className="space-y-8">
+              {/* Weekly Lesson */}
+              {weeklyLessons && weeklyLessons.length > 0 && (
+                <div>
+                  <h2 className="text-2xl font-bold mb-4">📚 Lição da Semana</h2>
+                  {weeklyLessons.map((lesson) => (
+                    <LessonCard
+                      key={lesson.id}
+                      lesson={lesson}
+                      progress={weeklyProgress?.find((p) => p.lesson_id === lesson.id)}
+                      onStart={() => handleStartLesson(lesson.id)}
+                      variant="default"
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* Additional Lessons */}
+              {additionalLessons && additionalLessons.length > 0 && (
+                <div>
+                  <h2 className="text-2xl font-bold mb-4">➕ Atividades Adicionais</h2>
+                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    {additionalLessons.map((lesson) => (
+                      <LessonCard
+                        key={lesson.id}
+                        lesson={lesson}
+                        progress={additionalProgress?.find((p) => p.lesson_id === lesson.id)}
+                        onStart={() => handleStartLesson(lesson.id)}
+                        variant="compact"
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Upcoming Lessons */}
+              {upcomingLessons && upcomingLessons.length > 0 && (
+                <div>
+                  <h2 className="text-2xl font-bold mb-4">🔜 Próximas Lições</h2>
+                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    {upcomingLessons.map((lesson) => (
+                      <LessonCard
+                        key={lesson.id}
+                        lesson={lesson}
+                        progress={upcomingProgress?.find((p) => p.lesson_id === lesson.id)}
+                        onStart={() => handleStartLesson(lesson.id)}
+                        variant="compact"
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Past Lessons */}
+              {pastLessons && pastLessons.length > 0 && (
+                <Collapsible>
+                  <CollapsibleTrigger className="flex items-center gap-2 text-xl font-bold mb-4 hover:text-primary transition-colors">
+                    <ChevronDown className="h-5 w-5" />
+                    📋 Lições Encerradas ({pastLessons.length})
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                      {pastLessons.map((lesson) => (
+                        <LessonCard
+                          key={lesson.id}
+                          lesson={lesson}
+                          progress={pastProgress?.find((p) => p.lesson_id === lesson.id)}
+                          onStart={() => handleStartLesson(lesson.id)}
+                          variant="compact"
+                        />
+                      ))}
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              )}
+
+              {/* Empty State */}
+              {!weeklyLessons?.length &&
+                !additionalLessons?.length &&
+                !upcomingLessons?.length &&
+                !pastLessons?.length && (
+                  <Card>
+                    <CardContent className="flex flex-col items-center justify-center py-12">
+                      <BookOpen className="h-16 w-16 text-muted-foreground mb-4" />
+                      <h3 className="text-xl font-semibold mb-2">Nenhuma lição disponível</h3>
+                      <p className="text-muted-foreground text-center">
+                        Novas lições serão adicionadas em breve. Fique atenta!
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+            </div>
           )}
         </main>
       </div>

@@ -10,6 +10,8 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import SuperAdmin from "./pages/SuperAdmin";
 import Lessons from "./pages/Lessons";
+import LessonPlayer from "./pages/LessonPlayer";
+import LessonResults from "./pages/LessonResults";
 import Quizzes from "./pages/Quizzes";
 import Progress from "./pages/Progress";
 import NotFound from "./pages/NotFound";
@@ -49,6 +51,22 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Lessons />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/lesson/:id"
+              element={
+                <ProtectedRoute>
+                  <LessonPlayer />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/lesson/:id/results"
+              element={
+                <ProtectedRoute>
+                  <LessonResults />
                 </ProtectedRoute>
               }
             />
