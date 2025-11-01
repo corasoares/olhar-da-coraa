@@ -106,7 +106,7 @@ export type Database = {
           quiz_config?: Json | null
           start_date?: string | null
           title: string
-          topics?: string[]
+          topics: string[]
           updated_at?: string | null
           youtube_url?: string | null
         }
@@ -223,6 +223,42 @@ export type Database = {
           },
         ]
       }
+      topics: {
+        Row: {
+          category: string | null
+          color: string
+          created_at: string | null
+          description: string | null
+          icon: string
+          id: string
+          name: string
+          slug: string
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string | null
+          color?: string
+          created_at?: string | null
+          description?: string | null
+          icon?: string
+          id?: string
+          name: string
+          slug: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string | null
+          color?: string
+          created_at?: string | null
+          description?: string | null
+          icon?: string
+          id?: string
+          name?: string
+          slug?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       user_difficulties: {
         Row: {
           category: string | null
@@ -236,6 +272,7 @@ export type Database = {
           resolved: boolean | null
           resolved_at: string | null
           topic: string
+          topic_id: string | null
           updated_at: string | null
           user_id: string
         }
@@ -251,6 +288,7 @@ export type Database = {
           resolved?: boolean | null
           resolved_at?: string | null
           topic: string
+          topic_id?: string | null
           updated_at?: string | null
           user_id: string
         }
@@ -266,10 +304,19 @@ export type Database = {
           resolved?: boolean | null
           resolved_at?: string | null
           topic?: string
+          topic_id?: string | null
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_difficulties_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topics"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_learning_profiles: {
         Row: {

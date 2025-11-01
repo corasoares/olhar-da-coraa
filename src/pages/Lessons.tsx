@@ -13,17 +13,16 @@ const Lessons = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const {
-    weeklyLessons,
-    additionalLessons,
-    upcomingLessons,
-    pastLessons,
-    weeklyProgress,
-    additionalProgress,
-    upcomingProgress,
-    pastProgress,
-    isLoading,
-  } = useActiveLessons(user?.id);
+  const { data, isLoading } = useActiveLessons(user?.id);
+  
+  const weeklyLessons = data?.weeklyLesson ? [data.weeklyLesson] : [];
+  const additionalLessons = data?.additionalLessons || [];
+  const upcomingLessons = data?.upcomingLessons || [];
+  const pastLessons = data?.pastLessons || [];
+  const weeklyProgress = data?.weeklyProgress;
+  const additionalProgress = data?.additionalProgress || [];
+  const pastProgress = data?.pastProgress || [];
+  const upcomingProgress: any[] = [];
 
   const handleStartLesson = (lessonId: string) => {
     navigate(`/lesson/${lessonId}`);

@@ -2,8 +2,8 @@ export interface UserLearningProfile {
   id: string;
   user_id: string;
   learning_style: string | null;
-  strengths: string[];
-  weaknesses: string[];
+  strengths: string[]; // UUIDs dos assuntos
+  weaknesses: string[]; // UUIDs dos assuntos
   average_score: number;
   total_quizzes_completed: number;
   total_lessons_completed: number;
@@ -24,7 +24,7 @@ export interface Lesson {
   description: string | null;
   content: any;
   lesson_type: 'questionnaire' | 'image_analysis' | 'quiz' | 'theory';
-  topics: string[];
+  topics: string[]; // UUIDs dos assuntos
   fashion_era: string | null;
   difficulty: 'easy' | 'medium' | 'hard';
   estimated_duration: number | null;
@@ -53,6 +53,8 @@ export interface LessonQuestion {
   order: number;
   type: 'dissertativa' | 'multipla_escolha';
   question: string;
+  topic_id?: string; // UUID do assunto
+  difficulty?: 1 | 2 | 3 | 4; // Nível de dificuldade
   options?: QuestionOption[];
 }
 
@@ -121,7 +123,7 @@ export interface QuizQuestion {
 export interface UserDifficulty {
   id: string;
   user_id: string;
-  topic: string;
+  topic_id: string; // UUID do assunto
   category: string | null;
   difficulty_level: 'low' | 'medium' | 'high' | 'critical';
   error_count: number;

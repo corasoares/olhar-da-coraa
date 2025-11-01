@@ -16,6 +16,7 @@ import { useLessonSubmission } from '@/hooks/useLessonSubmission';
 import { FormatRenderer } from '@/components/lessons/FormatRenderer';
 import { Loader2, Clock, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { Lesson } from '@/types/learning';
 
 const LessonPlayer = () => {
   const { id } = useParams();
@@ -60,9 +61,10 @@ const LessonPlayer = () => {
   };
 
   const handleSubmit = async () => {
-    if (!lesson?.quiz_config?.questions) return;
+    const quizConfig = lesson?.quiz_config as any;
+    if (!quizConfig?.questions) return;
 
-    if (!isAllAnswered(lesson.quiz_config.questions.length)) {
+    if (!isAllAnswered(quizConfig.questions.length)) {
       toast.error('Por favor, responda todas as questões antes de enviar.');
       return;
     }
@@ -95,7 +97,8 @@ const LessonPlayer = () => {
     );
   }
 
-  const questions = lesson.quiz_config?.questions || [];
+  const quizConfig = lesson.quiz_config as any;
+  const questions = quizConfig?.questions || [];
   const progress = (Object.keys(answers).length / questions.length) * 100;
 
   return (
@@ -143,7 +146,7 @@ const LessonPlayer = () => {
                   <CardTitle>Conteúdo da Lição</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <FormatRenderer lesson={lesson} />
+                  <FormatRenderer lesson={lesson as unknown as Lesson} />
                 </CardContent>
               </Card>
             )}
