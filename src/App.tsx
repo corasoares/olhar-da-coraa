@@ -17,6 +17,7 @@ import Progress from "./pages/Progress";
 import NotFound from "./pages/NotFound";
 import LessonsManager from "./pages/admin/LessonsManager";
 import LessonEditor from "./pages/admin/LessonEditor";
+import TopicsManager from "./pages/admin/TopicsManager";
 
 const queryClient = new QueryClient();
 
@@ -89,6 +90,7 @@ const App = () => (
             <Route path="/admin/lessons" element={<ProtectedRoute requireSuperAdmin><LessonsManager /></ProtectedRoute>} />
             <Route path="/admin/lessons/new" element={<ProtectedRoute requireSuperAdmin><LessonEditor /></ProtectedRoute>} />
             <Route path="/admin/lessons/:id" element={<ProtectedRoute requireSuperAdmin><LessonEditor /></ProtectedRoute>} />
+            <Route path="/admin/topics" element={<ProtectedRoute requireSuperAdmin><TopicsManager /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

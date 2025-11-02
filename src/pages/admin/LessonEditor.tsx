@@ -12,11 +12,15 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Badge } from '@/components/ui/badge';
 import { MediaUploader } from '@/components/admin/MediaUploader';
 import { QuizBuilder } from '@/components/admin/QuizBuilder';
 import { Lesson, LessonQuestion, QuizConfig } from '@/types/learning';
+import { Topic } from '@/types/topics';
+import { useTopics } from '@/hooks/useTopics';
 import { toast } from 'sonner';
-import { ArrowLeft, Save, Send, CalendarIcon } from 'lucide-react';
+import { ArrowLeft, Save, Send, CalendarIcon, Check, ChevronsUpDown, X } from 'lucide-react';
 import { format, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -25,11 +29,14 @@ export default function LessonEditor() {
   const { id } = useParams();
   const navigate = useNavigate();
   const isEditing = !!id;
+  
+  const { data: allTopics = [], isLoading: topicsLoading } = useTopics();
 
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [topics, setTopics] = useState<string[]>([]);
+  const [selectedTopicIds, setSelectedTopicIds] = useState<string[]>([]);
+  const [topicsOpen, setTopicsOpen] = useState(false);
   const [isAdditional, setIsAdditional] = useState(false);
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
@@ -65,7 +72,7 @@ export default function LessonEditor() {
     const lesson = data as any;
     setTitle(lesson.title);
     setDescription(lesson.description || '');
-    setTopics(lesson.topics || []);
+    setSelectedTopicIds(lesson.topics || []);
     setIsAdditional(lesson.is_additional || false);
     if (lesson.start_date) setStartDate(new Date(lesson.start_date));
     if (lesson.end_date) setEndDate(new Date(lesson.end_date));
@@ -82,6 +89,10 @@ export default function LessonEditor() {
   const validate = () => {
     if (!title.trim()) {
       toast.error('Título é obrigatório');
+      return false;
+    }
+    if (selectedTopicIds.length === 0) {
+      toast.error('Selecione pelo menos um assunto');
       return false;
     }
     if (!startDate || !endDate) {
@@ -118,6 +129,14 @@ export default function LessonEditor() {
         toast.error('Todas as perguntas devem ter texto');
         return false;
       }
+      if (!q.topic_id) {
+        toast.error(`Pergunta ${q.order}: Selecione um assunto`);
+        return false;
+      }
+      if (!q.difficulty || q.difficulty < 1 || q.difficulty > 4) {
+        toast.error(`Pergunta ${q.order}: Defina a dificuldade (1-4)`);
+        return false;
+      }
       if (q.type === 'multipla_escolha') {
         const hasCorrect = q.options?.some(o => o.is_correct);
         if (!hasCorrect) {
@@ -149,7 +168,7 @@ export default function LessonEditor() {
       const lessonData: any = {
         title,
         description,
-        topics,
+        topics: selectedTopicIds,
         is_additional: isAdditional,
         start_date: startDateISO,
         end_date: endDateISO,
@@ -240,6 +259,81 @@ export default function LessonEditor() {
                     placeholder="Descreva brevemente o conteúdo da lição..."
                     rows={3}
                   />
+                </div>
+
+                <div>
+                  <Label>Assuntos da Lição *</Label>
+                  <Popover open={topicsOpen} onOpenChange={setTopicsOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={topicsOpen}
+                        className="w-full justify-between"
+                      >
+                        {selectedTopicIds.length > 0
+                          ? `${selectedTopicIds.length} assunto(s) selecionado(s)`
+                          : "Selecione os assuntos"}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0">
+                      <Command>
+                        <CommandInput placeholder="Buscar assunto..." />
+                        <CommandEmpty>Nenhum assunto encontrado.</CommandEmpty>
+                        <CommandList>
+                          <CommandGroup>
+                            {allTopics.map((topic) => (
+                              <CommandItem
+                                key={topic.id}
+                                value={topic.name}
+                                onSelect={() => {
+                                  setSelectedTopicIds(prev =>
+                                    prev.includes(topic.id)
+                                      ? prev.filter(id => id !== topic.id)
+                                      : [...prev, topic.id]
+                                  );
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    selectedTopicIds.includes(topic.id) ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                <div className="flex items-center gap-2">
+                                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: topic.color }} />
+                                  {topic.name}
+                                </div>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                  
+                  {selectedTopicIds.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {selectedTopicIds.map(topicId => {
+                        const topic = allTopics.find(t => t.id === topicId);
+                        if (!topic) return null;
+                        return (
+                          <Badge
+                            key={topic.id}
+                            style={{ backgroundColor: topic.color }}
+                            className="gap-1"
+                          >
+                            {topic.name}
+                            <X
+                              className="h-3 w-3 cursor-pointer"
+                              onClick={() => setSelectedTopicIds(prev => prev.filter(id => id !== topic.id))}
+                            />
+                          </Badge>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -427,7 +521,17 @@ export default function LessonEditor() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <QuizBuilder questions={questions} onChange={setQuestions} />
+                {selectedTopicIds.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    Selecione pelo menos um assunto antes de criar perguntas.
+                  </p>
+                ) : (
+                  <QuizBuilder
+                    questions={questions}
+                    onChange={setQuestions}
+                    lessonTopics={allTopics.filter(t => selectedTopicIds.includes(t.id))}
+                  />
+                )}
               </CardContent>
             </Card>
 

@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.evaluate-lesson-responses]
 verify_jwt = true
+
+[functions.suggest-question-difficulty]
+verify_jwt = true
