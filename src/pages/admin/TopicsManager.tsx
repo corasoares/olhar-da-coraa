@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { SidebarProvider } from '@/components/ui/sidebar';
 import { AdminSidebar } from '@/components/AdminSidebar';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -57,9 +58,10 @@ export default function TopicsManager() {
   };
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <AdminSidebar />
-      <main className="flex-1 p-8">
+    <SidebarProvider>
+      <div className="flex min-h-screen w-full">
+        <AdminSidebar />
+        <main className="flex-1 p-8">
         <div className="max-w-7xl mx-auto space-y-6">
           <div className="flex justify-between items-center">
             <div>
@@ -151,6 +153,7 @@ export default function TopicsManager() {
           )}
         </div>
       </main>
-    </div>
+      </div>
+    </SidebarProvider>
   );
 }
