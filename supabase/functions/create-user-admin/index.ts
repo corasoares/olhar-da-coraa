@@ -40,11 +40,19 @@ serve(async (req) => {
     const { data: roleData, error: roleError } = await supabaseAdmin
       .from('user_roles')
       .select('role')
-      .eq('user_id', user.id)
-      .single();
+      .eq('user_id', user.id);
 
-    if (roleError || roleData?.role !== 'super_admin') {
+    if (roleError) {
       console.error('Role check failed:', roleError);
+      return new Response(
+        JSON.stringify({ error: 'Forbidden: Only super admins can create users' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const isSuperAdmin = roleData?.some((r: any) => r.role === 'super_admin');
+    if (!isSuperAdmin) {
+      console.error('User is not a super admin');
       return new Response(
         JSON.stringify({ error: 'Forbidden: Only super admins can create users' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
