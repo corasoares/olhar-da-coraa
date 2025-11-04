@@ -1,4 +1,4 @@
-import { LayoutDashboard, Settings, Users, LogOut, Sparkles, BookOpen, Tags } from 'lucide-react';
+import { LayoutDashboard, Settings, Users, LogOut, Sparkles, BookOpen, Tags, CreditCard } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import {
   Sidebar,
@@ -20,6 +20,7 @@ const adminItems = [
   { title: 'Lições', url: '/admin/lessons', icon: BookOpen },
   { title: 'Assuntos', url: '/admin/topics', icon: Tags },
   { title: 'Usuários', url: '/super-admin/users', icon: Users },
+  { title: 'Assinaturas', url: '/super-admin/subscriptions', icon: CreditCard },
   { title: 'Configurações', url: '/super-admin/settings', icon: Settings },
 ];
 

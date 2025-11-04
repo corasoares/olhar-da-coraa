@@ -19,6 +19,7 @@ import LessonsManager from "./pages/admin/LessonsManager";
 import LessonEditor from "./pages/admin/LessonEditor";
 import TopicsManager from "./pages/admin/TopicsManager";
 import UsersManager from "./pages/admin/UsersManager";
+import SubscriptionsManager from "./pages/admin/SubscriptionsManager";
 
 const queryClient = new QueryClient();
 
@@ -93,6 +94,7 @@ const App = () => (
             <Route path="/admin/lessons/:id" element={<ProtectedRoute requireSuperAdmin><LessonEditor /></ProtectedRoute>} />
             <Route path="/admin/topics" element={<ProtectedRoute requireSuperAdmin><TopicsManager /></ProtectedRoute>} />
             <Route path="/super-admin/users" element={<ProtectedRoute requireSuperAdmin><UsersManager /></ProtectedRoute>} />
+            <Route path="/super-admin/subscriptions" element={<ProtectedRoute requireSuperAdmin><SubscriptionsManager /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
