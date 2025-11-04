@@ -31,89 +31,124 @@ export function useUsers(searchTerm: string = '', roleFilter: string = 'all') {
   const { data: users = [], isLoading } = useQuery({
     queryKey: ['users', searchTerm, roleFilter],
     queryFn: async () => {
-      let query = supabase
+      // Fetch profiles first (server-side search when provided)
+      let profilesQuery = supabase
         .from('profiles')
-        .select(`
-          user_id,
-          email,
-          full_name,
-          created_at,
-          user_roles!inner(role),
-          user_learning_profiles(
-            level,
-            points,
-            streak_days,
-            total_lessons_completed,
-            total_quizzes_completed,
-            completion_rate,
-            strengths,
-            weaknesses
-          )
-        `)
+        .select('user_id, email, full_name, created_at')
         .order('created_at', { ascending: false });
 
       if (searchTerm) {
-        query = query.or(`email.ilike.%${searchTerm}%,full_name.ilike.%${searchTerm}%`);
+        profilesQuery = profilesQuery.or(`email.ilike.%${searchTerm}%,full_name.ilike.%${searchTerm}%`);
       }
 
-      // Note: Filtering by role on nested relation doesn't work well in PostgREST
-      // We'll filter in memory after fetching
+      const { data: profilesData, error: profilesError } = await profilesQuery;
+      if (profilesError) throw profilesError;
+      if (!profilesData || profilesData.length === 0) return [] as User[];
 
-      const { data, error } = await query;
+      const userIds = profilesData.map((p: any) => p.user_id);
 
-      if (error) throw error;
+      // Fetch roles and learning profiles in parallel and merge on client
+      const [rolesRes, lpRes] = await Promise.all([
+        supabase
+          .from('user_roles')
+          .select('user_id, role')
+          .in('user_id', userIds),
+        supabase
+          .from('user_learning_profiles')
+          .select('user_id, level, points, streak_days, total_lessons_completed, total_quizzes_completed, completion_rate, strengths, weaknesses')
+          .in('user_id', userIds),
+      ]);
 
-      let filteredData = data;
+      if (rolesRes.error) throw rolesRes.error;
+      if (lpRes.error) throw lpRes.error;
+
+      const rolesByUser = new Map<string, string>();
+      (rolesRes.data || []).forEach((r: any) => {
+        const current = rolesByUser.get(r.user_id);
+        // Prefer super_admin if user has multiple roles
+        const role = r.role;
+        if (!current || role === 'super_admin') rolesByUser.set(r.user_id, role);
+      });
+
+      const lpByUser = new Map<string, any>();
+      (lpRes.data || []).forEach((lp: any) => lpByUser.set(lp.user_id, lp));
+
+      let result = profilesData.map((p: any) => {
+        const role = rolesByUser.get(p.user_id) || 'user';
+        const lp = lpByUser.get(p.user_id) || {};
+        return {
+          user_id: p.user_id,
+          email: p.email,
+          full_name: p.full_name,
+          created_at: p.created_at,
+          role,
+          level: lp.level || 1,
+          points: lp.points || 0,
+          streak_days: lp.streak_days || 0,
+          total_lessons_completed: lp.total_lessons_completed || 0,
+          total_quizzes_completed: lp.total_quizzes_completed || 0,
+          completion_rate: lp.completion_rate || 0,
+          strengths: lp.strengths || [],
+          weaknesses: lp.weaknesses || [],
+        } as User;
+      });
+
       if (roleFilter !== 'all') {
-        filteredData = data.filter((user: any) => user.user_roles[0]?.role === roleFilter);
+        result = result.filter((u) => u.role === roleFilter);
       }
 
-      return filteredData.map((user: any) => ({
-        user_id: user.user_id,
-        email: user.email,
-        full_name: user.full_name,
-        created_at: user.created_at,
-        role: user.user_roles[0]?.role || 'user',
-        level: user.user_learning_profiles[0]?.level || 1,
-        points: user.user_learning_profiles[0]?.points || 0,
-        streak_days: user.user_learning_profiles[0]?.streak_days || 0,
-        total_lessons_completed: user.user_learning_profiles[0]?.total_lessons_completed || 0,
-        total_quizzes_completed: user.user_learning_profiles[0]?.total_quizzes_completed || 0,
-        completion_rate: user.user_learning_profiles[0]?.completion_rate || 0,
-        strengths: user.user_learning_profiles[0]?.strengths || [],
-        weaknesses: user.user_learning_profiles[0]?.weaknesses || [],
-      })) as User[];
+      return result;
     },
   });
 
   const { data: stats = { total: 0, active: 0, superAdmins: 0, newUsers: 0 } } = useQuery({
     queryKey: ['user-stats'],
     queryFn: async () => {
-      const { data: allUsers, error: allError } = await supabase
-        .from('profiles')
-        .select('user_id, created_at, user_roles(role), user_learning_profiles(streak_days)');
+      const [profilesRes, rolesRes, lpRes] = await Promise.all([
+        supabase.from('profiles').select('user_id, created_at'),
+        supabase.from('user_roles').select('user_id, role'),
+        supabase.from('user_learning_profiles').select('user_id, streak_days'),
+      ]);
 
-      if (allError) throw allError;
+      if (profilesRes.error) throw profilesRes.error;
+      if (rolesRes.error) throw rolesRes.error;
+      if (lpRes.error) throw lpRes.error;
 
-      const total = allUsers?.length || 0;
-      const active = allUsers?.filter((u: any) => u.user_learning_profiles?.[0]?.streak_days > 0).length || 0;
-      const superAdmins = allUsers?.filter((u: any) => u.user_roles?.[0]?.role === 'super_admin').length || 0;
-      
+      const profiles = profilesRes.data || [];
+      const total = profiles.length;
+      const active = (lpRes.data || []).filter((lp: any) => (lp.streak_days || 0) > 0).length;
+
+      const superAdminUsers = new Set<string>();
+      (rolesRes.data || []).forEach((r: any) => { if (r.role === 'super_admin') superAdminUsers.add(r.user_id); });
+      const superAdmins = superAdminUsers.size;
+
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      const newUsers = allUsers?.filter((u: any) => new Date(u.created_at) > sevenDaysAgo).length || 0;
+      const newUsers = profiles.filter((p: any) => new Date(p.created_at) > sevenDaysAgo).length;
 
-      return { total, active, superAdmins, newUsers };
+      return { total, active, superAdmins, newUsers } as UserStats;
     },
   });
 
   const createUserMutation = useMutation({
     mutationFn: async (userData: { email: string; fullName: string; password: string; role: string }) => {
+      // Pre-check: block duplicate emails for clearer UX
+      const { data: existing, error: checkError } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('email', userData.email)
+        .limit(1);
+      if (checkError) throw checkError;
+      if (existing && (existing as any[]).length > 0) {
+        throw new Error('Este email já está cadastrado.');
+      }
+
       const { data, error } = await supabase.functions.invoke('create-user-admin', {
         body: userData,
       });
 
-      if (error) throw error;
+      if (error) throw new Error(data?.error || 'Falha ao criar usuário');
+      if (data?.error) throw new Error(data.error);
       return data;
     },
     onSuccess: () => {
