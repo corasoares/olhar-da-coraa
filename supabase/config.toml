@@ -14,3 +14,6 @@ verify_jwt = true
 
 [functions.create-user-admin]
 verify_jwt = true
+
+[functions.mercadopago-oauth]
+verify_jwt = true

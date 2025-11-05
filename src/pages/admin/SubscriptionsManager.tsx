@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AdminSidebar } from '@/components/AdminSidebar';
@@ -9,13 +9,20 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import { CreditCard, Key, Shield, AlertCircle, CheckCircle2, Copy, Eye, EyeOff } from 'lucide-react';
+import { CreditCard, Key, Shield, AlertCircle, CheckCircle2, Copy, Eye, EyeOff, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useMercadoPago } from '@/hooks/useMercadoPago';
 
 export default function SubscriptionsManager() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { 
+    obtainAccessToken, 
+    saveProductionCredentials, 
+    saveTestCredentials,
+    getStoredCredentials 
+  } = useMercadoPago();
   const [showProductionKeys, setShowProductionKeys] = useState({
     publicKey: false,
     accessToken: false,
@@ -44,6 +51,40 @@ export default function SubscriptionsManager() {
   });
 
   const [isActivated, setIsActivated] = useState(false);
+  const [tokenInfo, setTokenInfo] = useState<{
+    expiresAt?: string;
+    accessToken?: string;
+  }>({});
+
+  // Load stored credentials on mount
+  useEffect(() => {
+    const stored = getStoredCredentials('production');
+    if (stored) {
+      setProductionCreds({
+        publicKey: stored.publicKey || '',
+        accessToken: stored.accessToken || '',
+        clientId: stored.clientId || '',
+        clientSecret: stored.clientSecret || '',
+        industry: stored.industry || '',
+        website: stored.website || '',
+      });
+      if (stored.generatedAccessToken) {
+        setTokenInfo({
+          expiresAt: stored.tokenExpiresAt,
+          accessToken: stored.generatedAccessToken,
+        });
+        setIsActivated(true);
+      }
+    }
+
+    const storedTest = getStoredCredentials('test');
+    if (storedTest) {
+      setTestCreds({
+        publicKey: storedTest.publicKey || '',
+        accessToken: storedTest.accessToken || '',
+      });
+    }
+  }, []);
 
   const handleCopyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -61,21 +102,75 @@ export default function SubscriptionsManager() {
     }
   };
 
-  const handleSaveProductionCreds = () => {
-    // TODO: Implementar salvamento das credenciais usando Supabase Secrets
-    toast({
-      title: "Credenciais salvas!",
-      description: "As credenciais de produção foram salvas com sucesso.",
-    });
+  const handleSaveProductionCreds = async () => {
+    if (!productionCreds.clientId || !productionCreds.clientSecret || !productionCreds.website) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Preencha Client ID, Client Secret e Website antes de salvar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    await saveProductionCredentials.mutateAsync(productionCreds);
     setIsActivated(true);
+    
+    // Reload stored credentials to get the generated token
+    const stored = getStoredCredentials('production');
+    if (stored?.generatedAccessToken) {
+      setTokenInfo({
+        expiresAt: stored.tokenExpiresAt,
+        accessToken: stored.generatedAccessToken,
+      });
+    }
   };
 
-  const handleSaveTestCreds = () => {
-    // TODO: Implementar salvamento das credenciais de teste
-    toast({
-      title: "Credenciais de teste salvas!",
-      description: "As credenciais de teste foram atualizadas com sucesso.",
+  const handleSaveTestCreds = async () => {
+    if (!testCreds.publicKey || !testCreds.accessToken) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Preencha Public Key e Access Token antes de salvar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    await saveTestCredentials.mutateAsync(testCreds);
+  };
+
+  const handleRefreshToken = async () => {
+    if (!productionCreds.clientId || !productionCreds.clientSecret) {
+      toast({
+        title: "Credenciais não configuradas",
+        description: "Configure as credenciais de produção primeiro.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const result = await obtainAccessToken.mutateAsync({
+      clientId: productionCreds.clientId,
+      clientSecret: productionCreds.clientSecret,
+      testMode: false,
     });
+
+    if (result) {
+      const newTokenInfo = {
+        expiresAt: new Date(Date.now() + result.expires_in * 1000).toISOString(),
+        accessToken: result.access_token,
+      };
+      setTokenInfo(newTokenInfo);
+
+      // Update stored credentials
+      const stored = getStoredCredentials('production');
+      if (stored) {
+        localStorage.setItem('mp_production_credentials', JSON.stringify({
+          ...stored,
+          generatedAccessToken: result.access_token,
+          tokenExpiresAt: newTokenInfo.expiresAt,
+        }));
+      }
+    }
   };
 
   return (
@@ -320,8 +415,37 @@ export default function SubscriptionsManager() {
                       </div>
                     </div>
 
-                    <Button onClick={handleSaveProductionCreds} className="w-full">
-                      Salvar Credenciais de Produção
+                    {tokenInfo.accessToken && (
+                      <Alert>
+                        <CheckCircle2 className="h-4 w-4" />
+                        <AlertDescription>
+                          <div className="space-y-1">
+                            <p className="font-semibold">Access Token Ativo</p>
+                            <p className="text-xs">
+                              Expira em: {tokenInfo.expiresAt ? new Date(tokenInfo.expiresAt).toLocaleString('pt-BR') : 'N/A'}
+                            </p>
+                            <div className="flex gap-2 mt-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleRefreshToken}
+                                disabled={obtainAccessToken.isPending}
+                              >
+                                <RefreshCw className={`h-4 w-4 mr-2 ${obtainAccessToken.isPending ? 'animate-spin' : ''}`} />
+                                Renovar Token
+                              </Button>
+                            </div>
+                          </div>
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
+                    <Button 
+                      onClick={handleSaveProductionCreds} 
+                      className="w-full"
+                      disabled={saveProductionCredentials.isPending}
+                    >
+                      {saveProductionCredentials.isPending ? 'Salvando...' : 'Salvar e Ativar Credenciais'}
                     </Button>
                   </CardContent>
                 </Card>
@@ -402,8 +526,12 @@ export default function SubscriptionsManager() {
                       </div>
                     </div>
 
-                    <Button onClick={handleSaveTestCreds} className="w-full">
-                      Salvar Credenciais de Teste
+                    <Button 
+                      onClick={handleSaveTestCreds} 
+                      className="w-full"
+                      disabled={saveTestCredentials.isPending}
+                    >
+                      {saveTestCredentials.isPending ? 'Salvando...' : 'Salvar Credenciais de Teste'}
                     </Button>
                   </CardContent>
                 </Card>
