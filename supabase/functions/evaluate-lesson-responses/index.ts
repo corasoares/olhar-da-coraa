@@ -9,7 +9,7 @@ const corsHeaders = {
 interface QuizQuestion {
   id: string;
   order: number;
-  type: 'dissertativa' | 'multipla_escolha';
+  type: 'dissertativa' | 'multipla_escolha' | 'multiple_choice';
   question: string;
   options?: Array<{
     id: string;
@@ -72,17 +72,17 @@ serve(async (req) => {
       let aiReasoning = '';
       let questionScore = 0;
 
-      if (question.type === 'multipla_escolha') {
+      if (question.type === 'multipla_escolha' || question.type === 'multiple_choice') {
         const correctOption = question.options?.find(opt => opt.is_correct);
-        isCorrect = userResponse.answer === correctOption?.id;
+        isCorrect = userResponse.answer === correctOption?.text;
         questionScore = isCorrect ? 10 : 0;
 
         if (isCorrect) {
           correctAnswers++;
-          aiReasoning = `Correto! A alternativa ${correctOption?.id}) está correta. `;
+          aiReasoning = `Correto! A resposta correta é: ${correctOption?.text}`;
         } else {
           incorrectAnswers++;
-          aiReasoning = `A resposta correta é a alternativa ${correctOption?.id}) ${correctOption?.text}. `;
+          aiReasoning = `A resposta correta é: ${correctOption?.text}`;
           difficulties.push({
             topic: topicsCovered[0] || 'Geral',
             context: `Erro em: ${question.question}`
@@ -172,9 +172,17 @@ serve(async (req) => {
 
       totalScore += questionScore;
 
+      // Encontrar resposta correta para questões de múltipla escolha
+      let correctAnswer = '';
+      if (question.type === 'multipla_escolha' || question.type === 'multiple_choice') {
+        const correctOption = question.options?.find(opt => opt.is_correct);
+        correctAnswer = correctOption?.text || '';
+      }
+
       questionFeedback.push({
         question_id: question.id,
         user_answer: userResponse.answer,
+        correct_answer: correctAnswer,
         is_correct: isCorrect,
         ai_reasoning: aiReasoning,
         score: questionScore,
@@ -270,9 +278,29 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ 
-        success: true, 
-        feedback: aiFeedback,
+        score: overallScore,
+        total_points: questions.length * 10,
+        feedback: questionFeedback.map((qf) => ({
+          question: questions.find(q => q.id === qf.question_id)?.question || '',
+          user_answer: qf.user_answer,
+          correct_answer: qf.correct_answer || null,
+          is_correct: qf.is_correct,
+          feedback: qf.ai_reasoning,
+          points_earned: qf.score,
+          max_points: 10,
+        })),
         points_earned: pointsEarned,
+        recommendations: overallScore < 70 ? [
+          'Revise o conteúdo estudado com mais atenção',
+          'Pratique mais questões sobre este tema',
+          'Consulte a base de conhecimento para aprofundar seu entendimento'
+        ] : overallScore < 90 ? [
+          'Continue praticando para melhorar ainda mais',
+          'Explore conteúdos avançados sobre este tema'
+        ] : [
+          'Excelente desempenho! Continue assim!',
+          'Você está pronto para tópicos mais avançados'
+        ]
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
