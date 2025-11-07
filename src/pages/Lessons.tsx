@@ -65,7 +65,7 @@ const Lessons = () => {
                     <LessonCard
                       key={lesson.id}
                       lesson={lesson}
-                      progress={weeklyProgress?.find((p) => p.lesson_id === lesson.id)}
+                      progress={weeklyProgress}
                       onStart={() => handleStartLesson(lesson.id)}
                       variant="default"
                     />
