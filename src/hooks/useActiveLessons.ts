@@ -18,7 +18,7 @@ export function useActiveLessons(userId?: string) {
         .gte('end_date', now)
         .order('start_date', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (weeklyError && weeklyError.code !== 'PGRST116') {
         console.error('Error fetching weekly lesson:', weeklyError);
@@ -76,7 +76,7 @@ export function useActiveLessons(userId?: string) {
             .select('*')
             .eq('user_id', userId)
             .eq('lesson_id', weeklyLesson.id)
-            .single();
+            .maybeSingle();
           weeklyProgress = progress;
         }
 
