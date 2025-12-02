@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -14,6 +15,8 @@ import LessonPlayer from "./pages/LessonPlayer";
 import LessonResults from "./pages/LessonResults";
 import Quizzes from "./pages/Quizzes";
 import Progress from "./pages/Progress";
+import Subscription from "./pages/Subscription";
+import Checkout from "./pages/Checkout";
 import NotFound from "./pages/NotFound";
 import LessonsManager from "./pages/admin/LessonsManager";
 import LessonEditor from "./pages/admin/LessonEditor";
@@ -30,9 +33,10 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
+          <SubscriptionProvider>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
             <Route
               path="/dashboard"
               element={
@@ -81,23 +85,40 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/progress"
-              element={
-                <ProtectedRoute>
-                  <Progress />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/admin/lessons" element={<ProtectedRoute requireSuperAdmin><LessonsManager /></ProtectedRoute>} />
-            <Route path="/admin/lessons/new" element={<ProtectedRoute requireSuperAdmin><LessonEditor /></ProtectedRoute>} />
-            <Route path="/admin/lessons/:id" element={<ProtectedRoute requireSuperAdmin><LessonEditor /></ProtectedRoute>} />
-            <Route path="/admin/topics" element={<ProtectedRoute requireSuperAdmin><TopicsManager /></ProtectedRoute>} />
-            <Route path="/super-admin/users" element={<ProtectedRoute requireSuperAdmin><UsersManager /></ProtectedRoute>} />
-            <Route path="/super-admin/subscriptions" element={<ProtectedRoute requireSuperAdmin><SubscriptionsManager /></ProtectedRoute>} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+              <Route
+                path="/progress"
+                element={
+                  <ProtectedRoute>
+                    <Progress />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/subscription"
+                element={
+                  <ProtectedRoute>
+                    <Subscription />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/checkout"
+                element={
+                  <ProtectedRoute>
+                    <Checkout />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/admin/lessons" element={<ProtectedRoute requireSuperAdmin><LessonsManager /></ProtectedRoute>} />
+              <Route path="/admin/lessons/new" element={<ProtectedRoute requireSuperAdmin><LessonEditor /></ProtectedRoute>} />
+              <Route path="/admin/lessons/:id" element={<ProtectedRoute requireSuperAdmin><LessonEditor /></ProtectedRoute>} />
+              <Route path="/admin/topics" element={<ProtectedRoute requireSuperAdmin><TopicsManager /></ProtectedRoute>} />
+              <Route path="/super-admin/users" element={<ProtectedRoute requireSuperAdmin><UsersManager /></ProtectedRoute>} />
+              <Route path="/super-admin/subscriptions" element={<ProtectedRoute requireSuperAdmin><SubscriptionsManager /></ProtectedRoute>} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </SubscriptionProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
