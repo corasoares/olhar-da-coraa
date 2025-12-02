@@ -74,6 +74,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           is_additional: boolean | null
+          is_premium: boolean | null
           knowledge_base: string | null
           lesson_type: string
           media_url: string | null
@@ -99,6 +100,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           is_additional?: boolean | null
+          is_premium?: boolean | null
           knowledge_base?: string | null
           lesson_type: string
           media_url?: string | null
@@ -124,6 +126,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           is_additional?: boolean | null
+          is_premium?: boolean | null
           knowledge_base?: string | null
           lesson_type?: string
           media_url?: string | null
@@ -136,6 +139,83 @@ export type Database = {
           youtube_url?: string | null
         }
         Relationships: []
+      }
+      payment_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          description: string | null
+          id: string
+          installments: number | null
+          metadata: Json | null
+          mp_external_reference: string | null
+          mp_payment_id: string | null
+          mp_preference_id: string | null
+          mp_status: string | null
+          mp_status_detail: string | null
+          payment_method: string | null
+          payment_type: string | null
+          processed_at: string | null
+          status: string
+          subscription_id: string | null
+          transaction_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          installments?: number | null
+          metadata?: Json | null
+          mp_external_reference?: string | null
+          mp_payment_id?: string | null
+          mp_preference_id?: string | null
+          mp_status?: string | null
+          mp_status_detail?: string | null
+          payment_method?: string | null
+          payment_type?: string | null
+          processed_at?: string | null
+          status?: string
+          subscription_id?: string | null
+          transaction_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          installments?: number | null
+          metadata?: Json | null
+          mp_external_reference?: string | null
+          mp_payment_id?: string | null
+          mp_preference_id?: string | null
+          mp_status?: string | null
+          mp_status_detail?: string | null
+          payment_method?: string | null
+          payment_type?: string | null
+          processed_at?: string | null
+          status?: string
+          subscription_id?: string | null
+          transaction_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_transactions_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -219,6 +299,134 @@ export type Database = {
             columns: ["lesson_id"]
             isOneToOne: false
             referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscription_plans: {
+        Row: {
+          created_at: string
+          currency: string
+          description: string | null
+          features: Json
+          id: string
+          is_active: boolean
+          mp_plan_id: string | null
+          name: string
+          price_monthly: number
+          price_yearly: number
+          slug: string
+          sort_order: number | null
+          trial_days: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          description?: string | null
+          features?: Json
+          id?: string
+          is_active?: boolean
+          mp_plan_id?: string | null
+          name: string
+          price_monthly?: number
+          price_yearly?: number
+          slug: string
+          sort_order?: number | null
+          trial_days?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          description?: string | null
+          features?: Json
+          id?: string
+          is_active?: boolean
+          mp_plan_id?: string | null
+          name?: string
+          price_monthly?: number
+          price_yearly?: number
+          slug?: string
+          sort_order?: number | null
+          trial_days?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          amount: number | null
+          billing_cycle: string | null
+          cancel_at_period_end: boolean | null
+          cancelled_at: string | null
+          created_at: string
+          currency: string | null
+          current_period_end: string | null
+          current_period_start: string | null
+          id: string
+          metadata: Json | null
+          mp_payer_id: string | null
+          mp_payment_method_id: string | null
+          mp_preapproval_id: string | null
+          mp_subscription_id: string | null
+          plan_id: string | null
+          started_at: string | null
+          status: string
+          trial_ends_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number | null
+          billing_cycle?: string | null
+          cancel_at_period_end?: boolean | null
+          cancelled_at?: string | null
+          created_at?: string
+          currency?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          metadata?: Json | null
+          mp_payer_id?: string | null
+          mp_payment_method_id?: string | null
+          mp_preapproval_id?: string | null
+          mp_subscription_id?: string | null
+          plan_id?: string | null
+          started_at?: string | null
+          status?: string
+          trial_ends_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number | null
+          billing_cycle?: string | null
+          cancel_at_period_end?: boolean | null
+          cancelled_at?: string | null
+          created_at?: string
+          currency?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          metadata?: Json | null
+          mp_payer_id?: string | null
+          mp_payment_method_id?: string | null
+          mp_preapproval_id?: string | null
+          mp_subscription_id?: string | null
+          plan_id?: string | null
+          started_at?: string | null
+          status?: string
+          trial_ends_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
             referencedColumns: ["id"]
           },
         ]
