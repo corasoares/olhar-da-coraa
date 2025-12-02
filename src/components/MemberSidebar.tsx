@@ -1,4 +1,4 @@
-import { LayoutDashboard, LogOut, Sparkles, BookOpen, Brain, TrendingUp } from 'lucide-react';
+import { LayoutDashboard, LogOut, Sparkles, BookOpen, Brain, TrendingUp, Crown } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import {
   Sidebar,
@@ -13,17 +13,21 @@ import {
   SidebarFooter,
 } from '@/components/ui/sidebar';
 import { useAuth } from '@/hooks/useAuth';
+import { useSubscriptionContext } from '@/contexts/SubscriptionContext';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 const memberItems = [
   { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
   { title: 'Lições', url: '/lessons', icon: BookOpen },
   { title: 'Quizzes', url: '/quizzes', icon: Brain },
   { title: 'Progresso', url: '/progress', icon: TrendingUp },
+  { title: 'Minha Assinatura', url: '/subscription', icon: Crown },
 ];
 
 export function MemberSidebar() {
   const { signOut } = useAuth();
+  const { isPremium, isTrialing } = useSubscriptionContext();
 
   return (
     <Sidebar>
@@ -31,6 +35,12 @@ export function MemberSidebar() {
         <div className="flex items-center gap-2">
           <Sparkles className="h-6 w-6 text-sidebar-primary" />
           <span className="font-bold text-lg text-sidebar-foreground">Olhar de Moda</span>
+          {isPremium && (
+            <Badge variant="default" className="text-[10px] px-1.5 py-0">Premium</Badge>
+          )}
+          {isTrialing && !isPremium && (
+            <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Trial</Badge>
+          )}
         </div>
       </SidebarHeader>
 
